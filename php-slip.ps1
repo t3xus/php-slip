@@ -19,12 +19,12 @@ Write-Host "`n"
 
 Write-Host "PHP-SLIP: Initiating download and installation process..." -ForegroundColor Green
 Write-Host ""
-
-Write-Host "  _ __  | |_    _ __   ___   ___ | | (_)  _ __ " -ForegroundColor Cyan
+Write-Host "================================================" -ForegroundColor Yellow
+Write-Host "  _ __  | |_    _ __   ___   ___ | | (_)  _ __  " -ForegroundColor Cyan
 Write-Host " | '_ \ | ' \  | '_ \ |___| (_-< | | | | | '_ \\" -ForegroundColor Cyan
-Write-Host " | .__/ |_||_| | .__/       /__/ |_| |_| | .__/" -ForegroundColor Cyan
-Write-Host " |_|           |_|                       |_|   " -ForegroundColor Cyan
-Write-Host "=========================================" -ForegroundColor Yellow
+Write-Host " | .__/ |_||_| | .__/       /__/ |_| |_| | .__/ " -ForegroundColor Cyan
+Write-Host " |_|           |_|                       |_|    " -ForegroundColor Cyan
+Write-Host "================================================" -ForegroundColor Yellow
 
 
 function Silently-Execute {
