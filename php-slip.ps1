@@ -40,6 +40,7 @@
     Version: 1.8
     License: MIT License
 #>
+
 $wampInstallerUrl = "https://sourceforge.net/projects/wampserver/files/WampServer%203/Wampserver%203.2.6/wampserver3.2.6_x64.exe/download"
 $wampInstallerPath = "C:\gooch\var\php-slip\wampserver-installer.exe"
 $installPath = "C:\gooch\var\php-slip"
@@ -90,26 +91,60 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['applications'])) {
 </body>
 </html>
 '@
+
 New-Item -Path "C:\gooch\var\php-slip" -ItemType Directory -Force
 Set-Content -Path $phpFilePath -Value $phpFileContent
-function Test-Command { param ([string]$Command) $errorActionPreference = 'SilentlyContinue' $null = Get-Command $Command -ErrorAction SilentlyContinue return $? }
-function Download-File { param ([string]$Url, [string]$Destination) Write-Host "Downloading $Url to $Destination" Invoke-WebRequest -Uri $Url -OutFile $Destination }
-if (-Not (Test-Path "$installPath\wamp64")) { Write-Host "WampServer not found, downloading and installing WampServer." Download-File $wampInstallerUrl $wampInstallerPath Start-Process -FilePath $wampInstallerPath -ArgumentList "/VERYSILENT /DIR=$installPath" -Wait } else { Write-Host "WampServer is already installed." }
-if (-Not (Test-Command "openssl") -and -Not (Test-Path $opensslPath)) { Write-Host "OpenSSL not found, downloading and installing OpenSSL." Download-File $opensslDownloadUrl $opensslInstallerPath Start-Process -FilePath $opensslInstallerPath -ArgumentList "/VERYSILENT /DIR=$installPath\openssl" -Wait $opensslPath = "$installPath\openssl\bin\openssl.exe" } else { Write-Host "OpenSSL is already installed or bundled with WampServer." }
+
+function Test-Command {
+    param ([string]$Command)
+    $null = Get-Command $Command -ErrorAction SilentlyContinue
+    return $?
+}
+
+function Download-File {
+    param ([string]$Url, [string]$Destination)
+    Write-Host "Downloading $Url to $Destination"
+    Invoke-WebRequest -Uri $Url -OutFile $Destination
+}
+
+if (-Not (Test-Path "$installPath\wamp64")) {
+    Write-Host "WampServer not found, downloading and installing WampServer."
+    Download-File $wampInstallerUrl $wampInstallerPath
+    Start-Process -FilePath $wampInstallerPath -ArgumentList "/VERYSILENT /DIR=$installPath" -Wait
+} else {
+    Write-Host "WampServer is already installed."
+}
+
+if (-Not (Test-Command "openssl") -and -Not (Test-Path $opensslPath)) {
+    Write-Host "OpenSSL not found, downloading and installing OpenSSL."
+    Download-File $opensslDownloadUrl $opensslInstallerPath
+    Start-Process -FilePath $opensslInstallerPath -ArgumentList "/VERYSILENT /DIR=$installPath\openssl" -Wait
+    $opensslPath = "$installPath\openssl\bin\openssl.exe"
+} else {
+    Write-Host "OpenSSL is already installed or bundled with WampServer."
+}
+
 $apacheConfPath = "$installPath\wamp64\bin\apache\apache2.4.46\conf\httpd.conf"
 $sslConfPath = "$installPath\wamp64\bin\apache\apache2.4.46\conf\extra\httpd-ssl.conf"
+
 (Get-Content $apacheConfPath) -replace "Listen 80", "Listen $port" | Set-Content $apacheConfPath
 (Get-Content $apacheConfPath) -replace 'DocumentRoot ".*"', 'DocumentRoot "C:/gooch/var/php-slip/"' | Set-Content $apacheConfPath
 (Get-Content $apacheConfPath) -replace '<Directory ".*">', '<Directory "C:/gooch/var/php-slip/">' | Set-Content $apacheConfPath
 Add-Content $apacheConfPath "`n<Directory ""C:/gooch/var/php-slip"">`n    Require all granted`n</Directory>"
+
 $certDir = "$installPath\wamp64\bin\apache\apache2.4.46\conf\ssl"
 New-Item -Path $certDir -ItemType Directory -Force
 $sslCertPath = "$certDir\localhost.crt"
 $sslKeyPath = "$certDir\localhost.key"
+
 & $opensslPath req -x509 -nodes -days 365 -newkey rsa:2048 -keyout $sslKeyPath -out $sslCertPath -subj "/C=US/ST=State/L=City/O=Organization/OU=Department/CN=localhost"
+
 (Get-Content $sslConfPath) -replace '443', "$port" | Set-Content $sslConfPath
 (Get-Content $sslConfPath) -replace 'SSLCertificateFile.*', "SSLCertificateFile $sslCertPath" | Set-Content $sslConfPath
 (Get-Content $sslConfPath) -replace 'SSLCertificateKeyFile.*', "SSLCertificateKeyFile $sslKeyPath" | Set-Content $sslConfPath
+
 Add-Content $sslConfPath "`n<VirtualHost _default_:$port>`n    DocumentRoot ""C:/gooch/var/php-slip/""`n    ServerName localhost`n    SSLEngine on`n    SSLCertificateFile ""$sslCertPath""`n    SSLCertificateKeyFile ""$sslKeyPath""`n</VirtualHost>"
+
 New-NetFirewallRule -DisplayName "Allow Apache on port $port" -Direction Inbound -Protocol TCP -LocalPort $port -Action Allow
+
 & "$installPath\wamp64\wampmanager.exe" restart
