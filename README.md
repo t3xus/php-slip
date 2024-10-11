@@ -17,4 +17,4 @@ C:\gooch\var\php-slip directory.
 Listen on 8778
 Localized HTTPS
 
-Firewall Rule
+Adds Firewall Rule
