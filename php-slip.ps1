@@ -1,10 +1,38 @@
-# Function to silently handle errors and continue the script
 cls
+
+Write-Host "`n"
+Write-Host "`n"
+Write-Host "`n"
+Write-Host "`n"
+Write-Host "`n"
+Write-Host "`n"
+
+$host.UI.RawUI.BackgroundColor = "DarkBlue"
+$host.UI.RawUI.ForegroundColor = "White"
+Clear-Host
+
+Write-Host "Copyright (c) 2024 James Gooch" -ForegroundColor Cyan
+
+Write-Host ""
+Write-Host "`n"
+Write-Host "`n"
+
+Write-Host "PHP-SLIP: Initiating download and installation process..." -ForegroundColor Green
+Write-Host ""
+
+Write-Host "  _ __  | |_    _ __   ___   ___ | | (_)  _ __ " -ForegroundColor Cyan
+Write-Host " | '_ \ | ' \  | '_ \ |___| (_-< | | | | | '_ \\" -ForegroundColor Cyan
+Write-Host " | .__/ |_||_| | .__/       /__/ |_| |_| | .__/" -ForegroundColor Cyan
+Write-Host " |_|           |_|                       |_|   " -ForegroundColor Cyan
+Write-Host "=========================================" -ForegroundColor Yellow
+
+
 function Silently-Execute {
     param ([scriptblock]$Command)
     try {
         & $Command
     } catch {
+        Write-Host "An error occurred, but the script will continue." -ForegroundColor Red
         $null # Ignore errors, continue script
     }
 }
@@ -16,24 +44,20 @@ function Monitor-DownloadsForFile {
     )
 
     $downloadsPath = [System.IO.Path]::Combine($env:USERPROFILE, 'Downloads')
+    Write-Host "Monitoring the Downloads folder for $TargetFile..." -ForegroundColor Yellow
 
-    Write-Host "Monitoring Downloads folder: $downloadsPath for $TargetFile"
-
-    # Monitor the Downloads folder for new files and log filenames
     while (-Not (Test-Path "$downloadsPath\$TargetFile")) {
         $currentFiles = Get-ChildItem -Path $downloadsPath -File | Select-Object -ExpandProperty Name
 
-        # Log new files to temp log file
         foreach ($file in $currentFiles) {
             if (-Not (Select-String -Path $TempLogFile -Pattern $file)) {
                 Add-Content -Path $TempLogFile -Value $file
-                Write-Host "New file detected: $file"
+                Write-Host "New file detected: $file" -ForegroundColor Cyan
             }
         }
 
-        # Check if the target file exists
         if (Test-Path "$downloadsPath\$TargetFile") {
-            Write-Host "$TargetFile found in Downloads folder."
+            Write-Host "$TargetFile found in Downloads folder." -ForegroundColor Green
             return "$downloadsPath\$TargetFile"
         }
 
@@ -48,10 +72,10 @@ function Run-InstallerAsAdmin {
     )
 
     if (Test-Path $FilePath) {
-        Write-Host "Running installer as Administrator with arguments: $Arguments"
+        Write-Host "Running installer as Administrator..." -ForegroundColor Cyan
         Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$FilePath`" $Arguments" -Verb RunAs -Wait
     } else {
-        Write-Host "Installer file not found."
+        Write-Host "Installer file not found." -ForegroundColor Red
     }
 }
 
@@ -62,17 +86,17 @@ function Invoke-FileDownload {
         [string]$TaskName
     )
 
-    Write-Host "Downloading $TaskName from $Url"
+    Write-Host "Downloading $TaskName from $Url..." -ForegroundColor Yellow
     $response = Silently-Execute { Invoke-WebRequest -Uri $Url -OutFile $Destination -UseBasicParsing -PassThru }
 
     if (-not $response) {
-        Write-Host "Failed to download $TaskName. No response received."
+        Write-Host "Failed to download $TaskName. No response received." -ForegroundColor Red
         return
     }
 
     $contentLength = $response.Headers["Content-Length"]
     if (-not $contentLength) {
-        Write-Host "Failed to retrieve content length. Download progress cannot be tracked."
+        Write-Host "Failed to retrieve content length for $TaskName." -ForegroundColor Red
         return
     }
 
@@ -83,6 +107,7 @@ function Invoke-FileDownload {
         Write-Progress -Activity "Downloading $TaskName" -Status "$progress% Completed" -PercentComplete $progress
         Start-Sleep -Milliseconds 100
     }
+    Write-Host "$TaskName download complete." -ForegroundColor Green
 }
 
 function Check-Command {
@@ -91,7 +116,6 @@ function Check-Command {
     return $?
 }
 
-# Function to show progress for elapsed time and estimated time
 function Show-ElapsedTimeProgress {
     param ([int]$ElapsedTime, [int]$TotalTime)
     $progress = [math]::round(($ElapsedTime / $TotalTime) * 100)
@@ -104,28 +128,21 @@ function Show-EstimatedTimeProgress {
     Write-Progress -Id 2 -Activity "Estimated Time Remaining" -Status "$EstimatedTime seconds total" -PercentComplete $progress
 }
 
-# Main script execution
 
-# WampServer download link and parameters
 $wampDownloadUrl = "https://wampserver.aviatechno.net/files/install/wampserver3.3.5_x64.exe"
 $wampInstallerPath = "$env:USERPROFILE\Downloads\wampserver3.3.5_x64.exe"
 $tempLogFile = "$env:TEMP\downloaded_files_log.txt"
 
-# Download WampServer
 Silently-Execute { Invoke-FileDownload -Url $wampDownloadUrl -Destination $wampInstallerPath -TaskName "WampServer" }
-
-# Run the WampServer installer silently as Administrator
 Silently-Execute { Run-InstallerAsAdmin -FilePath $wampInstallerPath -Arguments '/DIR="C:\wamp" /VERYSILENT /SUPPRESSMSGBOXES' }
 
-# OpenSSL download link and parameters
 $opensslDownloadUrl = "https://slproweb.com/download/Win64OpenSSL_Light-3_3_2.msi"
 $opensslInstallerPath = "$env:USERPROFILE\Downloads\Win64OpenSSL_Light-3_3_2.msi"
 $installPath = "C:\gooch\var\php-slip"
 $opensslPath = "$installPath\openssl\bin\openssl.exe"
 
-# Check if OpenSSL is installed
 if (-Not (Check-Command "openssl") -and -Not (Test-Path $opensslPath)) {
-    Write-Host "OpenSSL not found, downloading and installing OpenSSL."
+    Write-Host "OpenSSL not found, downloading and installing OpenSSL..." -ForegroundColor Yellow
     Silently-Execute { Invoke-FileDownload -Url $opensslDownloadUrl -Destination $opensslInstallerPath -TaskName "OpenSSL" }
 
     if (Test-Path $opensslInstallerPath) {
@@ -133,16 +150,16 @@ if (-Not (Check-Command "openssl") -and -Not (Test-Path $opensslPath)) {
         Silently-Execute { Start-Process -FilePath $opensslInstallerPath -ArgumentList "/quiet" -Wait }
         Write-Progress -Id 3 -Activity "Installing OpenSSL" -Status "Installation Complete" -PercentComplete 100
         $opensslPath = "$installPath\openssl\bin\openssl.exe"
+        Write-Host "OpenSSL installation complete." -ForegroundColor Green
     } else {
-        Write-Host "OpenSSL installer not found. The file might not have been downloaded correctly."
+        Write-Host "OpenSSL installer not found. The file might not have been downloaded correctly." -ForegroundColor Red
     }
 } else {
-    Write-Host "OpenSSL is already installed."
+    Write-Host "OpenSSL is already installed." -ForegroundColor Green
 }
 
-# Monitor progress for elapsed and estimated time
 $scriptStartTime = Get-Date
-$estimatedTotalTime = 300 # Adjust estimated total time in seconds (e.g., 5 minutes)
+$estimatedTotalTime = 130
 $elapsedTime = 0
 
 while ($elapsedTime -lt $estimatedTotalTime) {
@@ -152,4 +169,6 @@ while ($elapsedTime -lt $estimatedTotalTime) {
     Start-Sleep -Seconds 1
 }
 
-Write-Host "Script completed."
+Write-Host ""
+Write-Host "All tasks completed successfully!" -ForegroundColor Green
+Write-Host "=========================================" -ForegroundColor Yellow
