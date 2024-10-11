@@ -9,12 +9,14 @@
 
 Silent Installation of WampServer and OpenSSL for PHP Application Deployment in Windows 11 ISOs
 
-Creates php-slip.php
-Installs WampServer and OpenSSL if not already installed
+
+Installs WampServer and OpenSSL if not already installed.
 
 Configures Apache:
-C:\gooch\var\php-slip directory.
-Listen on 8778
-Localized HTTPS
+- C:\gooch\var\php-slip directory.
+- Listen on 8778
+- Localized HTTPS
 
-Adds Firewall Rule
+Adds Firewall Rule for 8778
+Creates php-slip.php
+
