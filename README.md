@@ -1,5 +1,4 @@
-# php-slip.ps1
-# php-slip.php & silent-wamp.ps1
+# php-slip
 
 ![Static Badge](https://img.shields.io/badge/Author-Jgooch-1F4D37)
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
