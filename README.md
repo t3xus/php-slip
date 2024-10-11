@@ -1,4 +1,5 @@
-# php-slip & silent-wamp
+# php-slip.ps1
+# php-slip.php & silent-wamp.ps1
 
 ![Static Badge](https://img.shields.io/badge/Author-Jgooch-1F4D37)
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
@@ -7,7 +8,7 @@
 
 ![Windows Logo](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcToJdo1ENov4AmAmS1VxCUWba1ylMODgf3KMA&s)
 
-Slipstream applications into a windows image.
+Silent Installation of WampServer and OpenSSL for PHP Application Deployment in Windows 11 ISOs
 
 Creates php-slip.php
 Installs WampServer and OpenSSL if not already installed
