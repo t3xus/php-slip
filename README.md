@@ -8,3 +8,13 @@
 ![Windows Logo](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcToJdo1ENov4AmAmS1VxCUWba1ylMODgf3KMA&s)
 
 Slipstream applications into a windows image.
+
+Creates php-slip.php
+Installs WampServer and OpenSSL if not already installed
+
+Configures Apache:
+C:\gooch\var\php-slip directory.
+Listen on 8778
+Localized HTTPS
+
+Firewall Rule
